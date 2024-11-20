@@ -244,5 +244,5 @@ jobs:
         uses: protocolbuffers/protobuf-ci/bazel@v3
         with:
           credentials: ${{ secrets.GAR_SERVICE_ACCOUNT }}
-          bazel-cache: php_macos/${{ matrix.version }}
+          bazel-cache: php_macos/${{ matrix.version }}-bazel7
           bazel: test //php:conformance_test //php:conformance_test_c --action_env=PATH --test_env=PATH
