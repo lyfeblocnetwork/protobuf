@@ -1257,6 +1257,48 @@ TEST_F(MapImplTest, CopyAssignMapIterator) {
   EXPECT_EQ(it1.GetKey().GetInt32Value(), it2.GetKey().GetInt32Value());
 }
 
+TEST_F(MapImplTest, SwapMapsFieldsViaReflection) {
+  auto* descriptor = UNITTEST::TestMap::descriptor();
+
+  DynamicMessageFactory factory;
+  std::unique_ptr<const Message> dyn_message(
+      factory.GetPrototype(descriptor)->New());
+  TestMap gen_message;
+  Arena arena;
+
+  std::vector<const FieldDescriptor*> fields;
+  for (int i = 0; i < descriptor->field_count(); ++i) {
+    fields.push_back(descriptor->field(i));
+  }
+
+  for (const Message* prototype :
+       {static_cast<const Message*>(&gen_message), dyn_message.get()}) {
+    const auto make = [&](bool in_arena) {
+      return in_arena ? prototype->New(&arena)
+                      : Arena::Create<std::unique_ptr<Message>>(
+                            &arena, prototype->New())
+                            ->get();
+    };
+
+    for (bool lhs_arena : {false, true}) {
+      for (bool rhs_arena : {false, true}) {
+        auto* lhs = make(lhs_arena);
+        auto* rhs = make(rhs_arena);
+        MapReflectionTester reflection_tester(descriptor);
+        reflection_tester.SetMapFieldsViaMapReflection(lhs);
+
+        reflection_tester.ExpectMapFieldsSetViaReflectionIterator(lhs);
+        reflection_tester.ExpectClearViaReflectionIterator(rhs);
+
+        lhs->GetReflection()->SwapFields(lhs, rhs, fields);
+
+        reflection_tester.ExpectClearViaReflectionIterator(lhs);
+        reflection_tester.ExpectMapFieldsSetViaReflectionIterator(rhs);
+      }
+    }
+  }
+}
+
 TEST_F(MapImplTest, SpaceUsed) {
   constexpr size_t kMinCap = 16 / sizeof(void*);
 
