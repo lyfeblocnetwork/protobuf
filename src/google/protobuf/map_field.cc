@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <string>
 
+#include "absl/functional/overload.h"
 #include "absl/log/absl_check.h"
 #include "absl/synchronization/mutex.h"
 #include "google/protobuf/arena.h"
@@ -32,6 +33,23 @@ namespace internal {
 MapFieldBase::~MapFieldBase() {
   ABSL_DCHECK_EQ(arena(), nullptr);
   delete maybe_payload();
+}
+
+void MapFieldBase::SetMapIteratorValueImpl(MapIterator* map_iter) {
+  if (map_iter->iter_.Equals(UntypedMapBase::EndIterator())) return;
+
+  const UntypedMapBase& map = *map_iter->iter_.m_;
+  NodeBase* node = map_iter->iter_.node_;
+  auto& key = map_iter->key_;
+  map.VisitKey(node,
+               absl::Overload{
+                   [&](const std::string* v) { key.val_.string_value = *v; },
+                   [&](const auto* v) {
+                     // Memcpy the scalar into the union.
+                     memcpy(static_cast<void*>(&key.val_), v, sizeof(*v));
+                   },
+               });
+  map_iter->value_.SetValue(map.GetVoidValue(node));
 }
 
 size_t MapFieldBase::SpaceUsedExcludingSelfNoLockImpl(const MapFieldBase& map) {

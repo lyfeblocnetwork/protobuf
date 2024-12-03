@@ -123,11 +123,6 @@ class DynamicMapKey {
   Variant variant_;
 };
 
-// The other overloads for SetMapKey are located in map_field_inl.h
-inline void SetMapKey(MapKey* map_key, const DynamicMapKey& value) {
-  *map_key = value.ToMapKey();
-}
-
 template <>
 struct is_internal_map_key_type<DynamicMapKey> : std::true_type {};
 
@@ -216,6 +211,7 @@ class DynamicMapField final
                                                const MapKey& map_key,
                                                MapValueRef* val);
   static void ClearMapNoSyncImpl(MapFieldBase& base);
+  static void SetMapIteratorValueImpl(MapIterator* map_iter);
 
   static void UnsafeShallowSwapImpl(MapFieldBase& lhs, MapFieldBase& rhs) {
     static_cast<DynamicMapField&>(lhs).Swap(
@@ -257,6 +253,13 @@ void DynamicMapField::ClearMapNoSyncImpl(MapFieldBase& base) {
   }
 
   self.map_.clear();
+}
+
+void DynamicMapField::SetMapIteratorValueImpl(MapIterator* map_iter) {
+  if (map_iter->iter_.Equals(UntypedMapBase::EndIterator())) return;
+  auto iter = typename decltype(map_)::const_iterator(map_iter->iter_);
+  map_iter->key_ = iter->first.ToMapKey();
+  map_iter->value_.CopyFrom(iter->second);
 }
 
 void DynamicMapField::AllocateMapValue(MapValueRef* map_val) {

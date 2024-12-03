@@ -343,13 +343,16 @@ class PROTOBUF_EXPORT UntypedMapBase {
     return reinterpret_cast<T*>(node->GetVoidKey());
   }
 
+  void* GetVoidValue(NodeBase* node) const {
+    return reinterpret_cast<char*>(node) + type_info_.value_offset;
+  }
+
   template <typename T>
   T* GetValue(NodeBase* node) const {
     // Debug check that `T` matches what we expect from the type info.
     ABSL_DCHECK_EQ(static_cast<int>(StaticTypeKind<T>()),
                    static_cast<int>(type_info_.value_type));
-    return reinterpret_cast<T*>(reinterpret_cast<char*>(node) +
-                                type_info_.value_offset);
+    return reinterpret_cast<T*>(GetVoidValue(node));
   }
 
   void ClearTable(bool reset, void (*destroy)(NodeBase*)) {

@@ -505,6 +505,7 @@ class PROTOBUF_EXPORT MapFieldBase : public MapFieldBaseForParse {
 
   static const UntypedMapBase& GetMapImpl(const MapFieldBaseForParse& map,
                                           bool is_mutable);
+  static void SetMapIteratorValueImpl(MapIterator* map_iter);
 
  private:
   friend class ContendedMapCleanTest;
@@ -621,7 +622,6 @@ class TypeDefinedMapFieldBase : public MapFieldBase {
   static bool DeleteMapValueImpl(MapFieldBase& map, const MapKey& map_key);
   static bool LookupMapValueImpl(const MapFieldBase& self,
                                  const MapKey& map_key, MapValueConstRef* val);
-  static void SetMapIteratorValueImpl(MapIterator* map_iter);
   static bool InsertOrLookupMapValueNoSyncImpl(MapFieldBase& map,
                                                const MapKey& map_key,
                                                MapValueRef* val);
