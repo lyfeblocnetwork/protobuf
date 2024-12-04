@@ -59,7 +59,6 @@
 #include "absl/log/globals.h"
 #include "absl/status/status.h"
 #include "absl/status/statusor.h"
-#include "absl/strings/ascii.h"
 #include "absl/strings/match.h"
 #include "absl/strings/str_cat.h"
 #include "absl/strings/str_format.h"
@@ -1496,7 +1495,6 @@ PopulateSingleSimpleDescriptorDatabase(const std::string& descriptor_set_name) {
 }
 
 }  // namespace
-
 
 bool CommandLineInterface::VerifyInputFilesInDescriptors(
     DescriptorDatabase* database) {
